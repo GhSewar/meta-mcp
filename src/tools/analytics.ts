@@ -4,7 +4,7 @@ import {
   GetInsightsSchema,
   ComparePerformanceSchema,
   ExportInsightsSchema,
-} from "../types/mcp-tools";
+} from "../types/mcp-tools.js";
 import type { AdInsights } from "../types/meta-api";
 
 export function setupAnalyticsTools(
