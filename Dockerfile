@@ -11,7 +11,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci --only=production --ignore-scripts && npm cache clean --force
 
 # Development stage for building
 FROM node:18-alpine AS build
@@ -23,7 +23,7 @@ COPY package*.json ./
 COPY tsconfig.json ./
 
 # Install all dependencies (including dev dependencies for building)
-RUN npm ci
+RUN npm ci --ignore-scripts
 
 # Copy source code
 COPY src/ ./src/
@@ -38,11 +38,11 @@ FROM base AS production
 COPY --from=build /app/build ./build
 
 # Copy any other necessary files (like docs if needed at runtime)
-COPY docs/ ./docs/
+# COPY docs/ ./docs/
 
 # Create a non-root user
 RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
+  adduser -S nodejs -u 1001
 
 # Change ownership of the app directory to nodejs user
 RUN chown -R nodejs:nodejs /app
@@ -62,4 +62,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 ENTRYPOINT ["dumb-init", "--"]
 
 # Default command to run the MCP server
-CMD ["node", "build/index.js"]
+CMD ["node", "build/src/index.js"]
