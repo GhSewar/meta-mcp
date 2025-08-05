@@ -1,12 +1,12 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { MetaApiClient } from "../meta-client.js";
 import {
-  ListCampaignsSchema,
+  CreateAdSetSchema,
   CreateCampaignSchema,
-  UpdateCampaignSchema,
   DeleteCampaignSchema,
   ListAdSetsSchema,
-  CreateAdSetSchema,
+  ListCampaignsSchema,
+  UpdateCampaignSchema,
 } from "../types/mcp-tools.js";
 
 export function setupCampaignTools(
@@ -26,6 +26,12 @@ export function registerCampaignTools(
     "Retrieve a paginated list of all campaigns for a Meta ad account. Filter by status (e.g., ACTIVE, PAUSED) and view key campaign details including budget, objective, and timing. Use this to audit or select campaigns for further actions.",
     ListCampaignsSchema.shape,
     async ({ account_id, status, limit, after }) => {
+      console.log("list_campaigns tool called with parameters:", {
+        account_id,
+        status,
+        limit,
+        after,
+      });
       try {
         const result = await metaClient.getCampaigns(account_id, {
           status: status ? [status] : undefined,
@@ -59,6 +65,7 @@ export function registerCampaignTools(
           total_count: campaigns.length,
         };
 
+        console.log("list_campaigns tool response prepared:", response);
         return {
           content: [
             {
@@ -68,6 +75,7 @@ export function registerCampaignTools(
           ],
         };
       } catch (error) {
+        console.error("list_campaigns tool error:", error);
         const errorMessage =
           error instanceof Error ? error.message : "Unknown error occurred";
         return {
@@ -522,8 +530,7 @@ export function registerCampaignTools(
         const objectiveData = objectiveMap[campaign.objective];
         if (objectiveData) {
           readinessCheck.recommendations.push(
-            `For ${
-              campaign.objective
+            `For ${campaign.objective
             }, use optimization_goal: ${objectiveData.recommended_optimization.join(
               " or "
             )}`
@@ -534,8 +541,7 @@ export function registerCampaignTools(
             )}`
           );
           readinessCheck.recommendations.push(
-            `Minimum daily budget: $${objectiveData.min_budget / 100} (${
-              objectiveData.min_budget
+            `Minimum daily budget: $${objectiveData.min_budget / 100} (${objectiveData.min_budget
             } cents)`
           );
         }

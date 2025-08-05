@@ -1,12 +1,12 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { MetaApiClient } from "../meta-client.js";
 import {
-  ListCreativesSchema,
+  AnalyzeCreativesSchema,
   CreateAdCreativeSchema,
+  CreativeValidationEnhancedSchema,
+  ListCreativesSchema,
   PreviewAdSchema,
   TroubleshootCreativeSchema,
-  AnalyzeCreativesSchema,
-  CreativeValidationEnhancedSchema,
   UploadImageFromUrlSchema,
 } from "../types/mcp-tools.js";
 
@@ -27,6 +27,11 @@ export function registerCreativeTools(
     "List all ad creatives in an ad account. Use this to see existing creatives, their formats, and content before creating new ones or reusing existing creatives.",
     ListCreativesSchema.shape,
     async ({ account_id, limit, after }) => {
+      console.log("list_creatives tool called with parameters:", {
+        account_id,
+        limit,
+        after,
+      });
       try {
         const result = await metaClient.getAdCreatives(account_id, {
           limit,
@@ -57,6 +62,7 @@ export function registerCreativeTools(
           account_id,
         };
 
+        console.log("list_creatives tool response prepared:", response);
         return {
           content: [
             {
@@ -66,13 +72,13 @@ export function registerCreativeTools(
           ],
         };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        console.error("list_creatives tool error:", error);
         return {
           content: [
             {
               type: "text",
-              text: `Error listing creatives: ${errorMessage}`,
+              text: `Error listing creatives: ${error instanceof Error ? error.message : "Unknown error occurred"
+                }`,
             },
           ],
           isError: true,
@@ -259,30 +265,30 @@ export function registerCreativeTools(
 
           if (enhancement_features.enhance_cta) {
             creativeData.degrees_of_freedom_spec.creative_features_spec.enhance_cta =
-              {
-                enroll_status: "OPT_IN",
-              };
+            {
+              enroll_status: "OPT_IN",
+            };
           }
 
           if (enhancement_features.image_brightness_and_contrast) {
             creativeData.degrees_of_freedom_spec.creative_features_spec.image_brightness_and_contrast =
-              {
-                enroll_status: "OPT_IN",
-              };
+            {
+              enroll_status: "OPT_IN",
+            };
           }
 
           if (enhancement_features.text_improvements) {
             creativeData.degrees_of_freedom_spec.creative_features_spec.text_improvements =
-              {
-                enroll_status: "OPT_IN",
-              };
+            {
+              enroll_status: "OPT_IN",
+            };
           }
 
           if (enhancement_features.image_templates) {
             creativeData.degrees_of_freedom_spec.creative_features_spec.image_templates =
-              {
-                enroll_status: "OPT_IN",
-              };
+            {
+              enroll_status: "OPT_IN",
+            };
           }
         }
 
@@ -435,8 +441,7 @@ export function registerCreativeTools(
         }
         console.log("===============================");
 
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
         return {
           content: [
             {
@@ -644,8 +649,7 @@ export function registerCreativeTools(
           ],
         };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
         return {
           content: [
             {
@@ -694,8 +698,7 @@ export function registerCreativeTools(
           ],
         };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
         return {
           content: [
             {
@@ -751,8 +754,7 @@ export function registerCreativeTools(
           ],
         };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
         return {
           content: [
             {
@@ -815,8 +817,7 @@ export function registerCreativeTools(
           ],
         };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
         return {
           content: [
             {
@@ -875,8 +876,7 @@ export function registerCreativeTools(
           ],
         };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
         return {
           content: [
             {
@@ -936,8 +936,7 @@ export function registerCreativeTools(
           ],
         };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
         return {
           content: [
             {
@@ -991,8 +990,7 @@ export function registerCreativeTools(
           ],
         };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
         return {
           content: [
             {
@@ -1309,8 +1307,7 @@ export function registerCreativeTools(
           ],
         };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
         return {
           content: [
             {
@@ -1713,8 +1710,7 @@ export function registerCreativeTools(
           ],
         };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
         return {
           content: [
             {
@@ -1825,17 +1821,17 @@ export function registerCreativeTools(
         analysis.summary.avg_headline_length =
           headlineLengths.length > 0
             ? Math.round(
-                headlineLengths.reduce((sum, len) => sum + len, 0) /
-                  headlineLengths.length
-              )
+              headlineLengths.reduce((sum, len) => sum + len, 0) /
+              headlineLengths.length
+            )
             : 0;
 
         analysis.summary.avg_message_length =
           messageLengths.length > 0
             ? Math.round(
-                messageLengths.reduce((sum, len) => sum + len, 0) /
-                  messageLengths.length
-              )
+              messageLengths.reduce((sum, len) => sum + len, 0) /
+              messageLengths.length
+            )
             : 0;
 
         // Find most common CTA
@@ -1917,8 +1913,7 @@ export function registerCreativeTools(
           ],
         };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
         return {
           content: [
             {
@@ -2039,8 +2034,7 @@ export function registerCreativeTools(
         console.log("Error:", error);
         console.log("=========================");
 
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
         return {
           content: [
             {
@@ -2236,8 +2230,7 @@ export function registerCreativeTools(
           ],
         };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
         return {
           content: [
             {
@@ -2428,8 +2421,7 @@ export function registerCreativeTools(
           ],
         };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
         return {
           content: [
             {

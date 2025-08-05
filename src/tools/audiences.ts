@@ -1,10 +1,10 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { MetaApiClient } from "../meta-client.js";
 import {
-  ListAudiencesSchema,
   CreateCustomAudienceSchema,
   CreateLookalikeAudienceSchema,
   EstimateAudienceSizeSchema,
+  ListAudiencesSchema,
 } from "../types/mcp-tools.js";
 
 export function setupAudienceTools(
@@ -23,6 +23,12 @@ export function registerAudienceTools(
     "list_audiences",
     ListAudiencesSchema.shape,
     async ({ account_id, type, limit, after }) => {
+      console.log("list_audiences tool called with parameters:", {
+        account_id,
+        type,
+        limit,
+        after,
+      });
       try {
         const result = await metaClient.getCustomAudiences(account_id, {
           limit,
@@ -64,6 +70,7 @@ export function registerAudienceTools(
           filter_applied: type || "all",
         };
 
+        console.log("list_audiences tool response prepared:", response);
         return {
           content: [
             {
@@ -73,8 +80,8 @@ export function registerAudienceTools(
           ],
         };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+        console.error("list_audiences tool error:", errorMessage);
         return {
           content: [
             {
@@ -101,6 +108,15 @@ export function registerAudienceTools(
       retention_days,
       rule,
     }) => {
+      console.log("create_custom_audience tool called with parameters:", {
+        account_id,
+        name,
+        description,
+        subtype,
+        customer_file_source,
+        retention_days,
+        rule,
+      });
       try {
         const audienceData: any = {
           name,
@@ -137,6 +153,7 @@ export function registerAudienceTools(
           ],
         };
 
+        console.log("create_custom_audience tool response prepared:", response);
         return {
           content: [
             {
@@ -146,8 +163,8 @@ export function registerAudienceTools(
           ],
         };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+        console.error("create_custom_audience tool error:", errorMessage);
         return {
           content: [
             {
@@ -173,6 +190,14 @@ export function registerAudienceTools(
       ratio,
       description,
     }) => {
+      console.log("create_lookalike_audience tool called with parameters:", {
+        account_id,
+        name,
+        origin_audience_id,
+        country,
+        ratio,
+        description,
+      });
       try {
         if (ratio < 0.01 || ratio > 0.2) {
           return {
@@ -221,6 +246,7 @@ export function registerAudienceTools(
           ],
         };
 
+        console.log("create_lookalike_audience tool response prepared:", response);
         return {
           content: [
             {
@@ -230,8 +256,8 @@ export function registerAudienceTools(
           ],
         };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+        console.error("create_lookalike_audience tool error:", errorMessage);
         return {
           content: [
             {
@@ -250,6 +276,11 @@ export function registerAudienceTools(
     "estimate_audience_size",
     EstimateAudienceSizeSchema.shape,
     async ({ account_id, targeting, optimization_goal }) => {
+      console.log("estimate_audience_size tool called with parameters:", {
+        account_id,
+        targeting,
+        optimization_goal,
+      });
       try {
         const estimate = await metaClient.estimateAudienceSize(
           account_id,
@@ -286,6 +317,7 @@ export function registerAudienceTools(
           account_id,
         };
 
+        console.log("estimate_audience_size tool response prepared:", response);
         return {
           content: [
             {
@@ -295,8 +327,8 @@ export function registerAudienceTools(
           ],
         };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+        console.error("estimate_audience_size tool error:", errorMessage);
         return {
           content: [
             {
@@ -315,6 +347,11 @@ export function registerAudienceTools(
     "update_custom_audience",
     CreateCustomAudienceSchema.shape,
     async ({ name, description, retention_days }) => {
+      console.log("update_custom_audience tool called with parameters:", {
+        name,
+        description,
+        retention_days,
+      });
       try {
         // Note: This is a simplified version. The actual Meta API endpoint would be different
         // For now, we'll return a structure showing what could be updated
@@ -335,6 +372,7 @@ export function registerAudienceTools(
           ],
         };
 
+        console.log("update_custom_audience tool response prepared:", response);
         return {
           content: [
             {
@@ -344,8 +382,8 @@ export function registerAudienceTools(
           ],
         };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+        console.error("update_custom_audience tool error:", errorMessage);
         return {
           content: [
             {
@@ -361,6 +399,7 @@ export function registerAudienceTools(
 
   // Delete Audience Tool
   server.tool("delete_audience", ListAudiencesSchema.shape, async () => {
+    console.log("delete_audience tool called");
     try {
       // Note: This would require an audience_id parameter in a real implementation
       const response = {
@@ -372,6 +411,7 @@ export function registerAudienceTools(
         confirmation_required: true,
       };
 
+      console.log("delete_audience tool response prepared:", response);
       return {
         content: [
           {
@@ -381,8 +421,8 @@ export function registerAudienceTools(
         ],
       };
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error occurred";
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      console.error("delete_audience tool error:", errorMessage);
       return {
         content: [
           {
@@ -400,6 +440,9 @@ export function registerAudienceTools(
     "get_audience_insights",
     EstimateAudienceSizeSchema.shape,
     async ({ targeting }) => {
+      console.log("get_audience_insights tool called with parameters:", {
+        targeting,
+      });
       try {
         // This would typically call a different endpoint for audience insights
         // For now, we'll provide a structured response showing what insights are available
@@ -421,6 +464,7 @@ export function registerAudienceTools(
           ],
         };
 
+        console.log("get_audience_insights tool response prepared:", response);
         return {
           content: [
             {
@@ -430,8 +474,8 @@ export function registerAudienceTools(
           ],
         };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+        console.error("get_audience_insights tool error:", errorMessage);
         return {
           content: [
             {

@@ -1,11 +1,11 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { AuthManager } from "../utils/auth.js";
 import {
-  GenerateAuthUrlSchema,
   ExchangeCodeSchema,
-  RefreshTokenSchema,
+  GenerateAuthUrlSchema,
   GenerateSystemTokenSchema,
+  RefreshTokenSchema,
 } from "../types/mcp-tools.js";
+import { AuthManager } from "../utils/auth.js";
 
 export function setupOAuthTools(server: McpServer, authManager: AuthManager) {
   registerOAuthTools(server, authManager);
@@ -20,6 +20,10 @@ export function registerOAuthTools(
     "generate_auth_url",
     GenerateAuthUrlSchema.shape,
     async ({ scopes, state }) => {
+      console.log("generate_auth_url tool called with parameters:", {
+        scopes,
+        state,
+      });
       try {
         const authUrl = authManager.generateAuthUrl(scopes, state);
 
@@ -40,6 +44,7 @@ export function registerOAuthTools(
           redirect_uri: authManager["config"].redirectUri,
         };
 
+        console.log("generate_auth_url tool response prepared:", response);
         return {
           content: [
             {
@@ -49,13 +54,14 @@ export function registerOAuthTools(
           ],
         };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        console.error("generate_auth_url tool error:", error);
         return {
           content: [
             {
               type: "text",
-              text: `Error generating authorization URL: ${errorMessage}`,
+              text: `Error generating authorization URL: ${
+                error instanceof Error ? error.message : String(error)
+              }`,
             },
           ],
           isError: true,
@@ -69,6 +75,9 @@ export function registerOAuthTools(
     "exchange_code_for_token",
     ExchangeCodeSchema.shape,
     async ({ code }) => {
+      console.log("exchange_code_for_token tool called with parameters:", {
+        code,
+      });
       try {
         const result = await authManager.exchangeCodeForToken(code);
 
@@ -95,6 +104,7 @@ export function registerOAuthTools(
           ],
         };
 
+        console.log("exchange_code_for_token tool response prepared:", response);
         return {
           content: [
             {
@@ -104,13 +114,14 @@ export function registerOAuthTools(
           ],
         };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        console.error("exchange_code_for_token tool error:", error);
         return {
           content: [
             {
               type: "text",
-              text: `Error exchanging authorization code: ${errorMessage}`,
+              text: `Error exchanging authorization code: ${
+                error instanceof Error ? error.message : String(error)
+              }`,
             },
           ],
           isError: true,
@@ -124,6 +135,9 @@ export function registerOAuthTools(
     "refresh_to_long_lived_token",
     RefreshTokenSchema.shape,
     async ({ short_lived_token }) => {
+      console.log("refresh_to_long_lived_token tool called with parameters:", {
+        short_lived_token,
+      });
       try {
         const result = await authManager.exchangeForLongLivedToken(
           short_lived_token
@@ -154,6 +168,7 @@ export function registerOAuthTools(
           },
         };
 
+        console.log("refresh_to_long_lived_token tool response prepared:", response);
         return {
           content: [
             {
@@ -163,13 +178,14 @@ export function registerOAuthTools(
           ],
         };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        console.error("refresh_to_long_lived_token tool error:", error);
         return {
           content: [
             {
               type: "text",
-              text: `Error refreshing to long-lived token: ${errorMessage}`,
+              text: `Error refreshing to long-lived token: ${
+                error instanceof Error ? error.message : String(error)
+              }`,
             },
           ],
           isError: true,
@@ -183,6 +199,11 @@ export function registerOAuthTools(
     "generate_system_user_token",
     GenerateSystemTokenSchema.shape,
     async ({ system_user_id, scopes, expiring_token }) => {
+      console.log("generate_system_user_token tool called with parameters:", {
+        system_user_id,
+        scopes,
+        expiring_token,
+      });
       try {
         const result = await authManager.generateSystemUserToken(
           system_user_id,
@@ -218,6 +239,7 @@ export function registerOAuthTools(
           ],
         };
 
+        console.log("generate_system_user_token tool response prepared:", response);
         return {
           content: [
             {
@@ -227,13 +249,14 @@ export function registerOAuthTools(
           ],
         };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        console.error("generate_system_user_token tool error:", error);
         return {
           content: [
             {
               type: "text",
-              text: `Error generating system user token: ${errorMessage}`,
+              text: `Error generating system user token: ${
+                error instanceof Error ? error.message : String(error)
+              }`,
             },
           ],
           isError: true,
@@ -379,7 +402,7 @@ function generateTokenRecommendations(
   if (tokenInfo.expiresAt) {
     const daysUntilExpiration = Math.ceil(
       (new Date(tokenInfo.expiresAt).getTime() - Date.now()) /
-        (1000 * 60 * 60 * 24)
+      (1000 * 60 * 60 * 24)
     );
     if (daysUntilExpiration < 7) {
       recommendations.push(

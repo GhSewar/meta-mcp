@@ -1,9 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { MetaApiClient } from "../meta-client.js";
 import {
-  GetInsightsSchema,
   ComparePerformanceSchema,
   ExportInsightsSchema,
+  GetInsightsSchema,
 } from "../types/mcp-tools.js";
 import type { AdInsights } from "../types/meta-api";
 
@@ -31,6 +31,15 @@ export function registerAnalyticsTools(
       breakdowns,
       limit,
     }) => {
+      console.log("get_insights tool called with parameters:", {
+        object_id,
+        level,
+        date_preset,
+        time_range,
+        fields,
+        breakdowns,
+        limit,
+      });
       try {
         const params: Record<string, any> = {
           level,
@@ -53,7 +62,11 @@ export function registerAnalyticsTools(
           params.breakdowns = breakdowns;
         }
 
+        console.log("get_insights tool parameters prepared:", params);
+
         const result = await metaClient.getInsights(object_id, params);
+
+        console.log("get_insights tool result received:", result);
 
         const insights = result.data.map((insight) => ({
           date_start: insight.date_start,
@@ -77,8 +90,12 @@ export function registerAnalyticsTools(
           ad_id: insight.ad_id,
         }));
 
+        console.log("get_insights tool insights processed:", insights);
+
         // Calculate summary statistics
         const summary = calculateSummaryMetrics(insights);
+
+        console.log("get_insights tool summary calculated:", summary);
 
         const response = {
           insights,
@@ -100,6 +117,7 @@ export function registerAnalyticsTools(
           total_count: insights.length,
         };
 
+        console.log("get_insights tool response prepared:", response);
         return {
           content: [
             {
@@ -109,8 +127,8 @@ export function registerAnalyticsTools(
           ],
         };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        console.error("get_insights tool error:", error);
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
         return {
           content: [
             {
@@ -129,6 +147,13 @@ export function registerAnalyticsTools(
     "compare_performance",
     ComparePerformanceSchema.shape,
     async ({ object_ids, level, date_preset, time_range, metrics }) => {
+      console.log("compare_performance tool called with parameters:", {
+        object_ids,
+        level,
+        date_preset,
+        time_range,
+        metrics,
+      });
       try {
         const params: Record<string, any> = {
           level,
@@ -143,15 +168,18 @@ export function registerAnalyticsTools(
           params.date_preset = "last_7d";
         }
 
-        // Fetch insights for all objects
+        console.log("compare_performance tool parameters prepared:", params);
+
         const comparisons: any[] = [];
 
         for (const objectId of object_ids) {
           try {
             const result = await metaClient.getInsights(objectId, params);
-            const summary = calculateSummaryMetrics(result.data);
+            console.log("compare_performance tool result for object:", objectId, result);
 
-            // Get object details (name, etc.)
+            const summary = calculateSummaryMetrics(result.data);
+            console.log("compare_performance tool summary for object:", objectId, summary);
+
             let objectName = objectId;
             const objectType = level;
 
@@ -160,9 +188,8 @@ export function registerAnalyticsTools(
                 const campaign = await metaClient.getCampaign(objectId);
                 objectName = campaign.name;
               }
-              // Could add similar logic for ad sets and ads
             } catch {
-              // If we can't get the name, use the ID
+              console.warn("compare_performance tool failed to fetch name for object:", objectId);
             }
 
             comparisons.push({
@@ -172,6 +199,7 @@ export function registerAnalyticsTools(
               metrics: summary,
             });
           } catch (error) {
+            console.error("compare_performance tool error for object:", objectId, error);
             comparisons.push({
               object_id: objectId,
               object_name: objectId,
@@ -181,8 +209,8 @@ export function registerAnalyticsTools(
           }
         }
 
-        // Calculate performance rankings
         const rankings = calculatePerformanceRankings(comparisons, metrics);
+        console.log("compare_performance tool rankings calculated:", rankings);
 
         const response = {
           comparison_results: comparisons,
@@ -197,6 +225,8 @@ export function registerAnalyticsTools(
           comparison_date: new Date().toISOString(),
         };
 
+        console.log("compare_performance tool response prepared:", response);
+
         return {
           content: [
             {
@@ -206,8 +236,8 @@ export function registerAnalyticsTools(
           ],
         };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+        console.error("compare_performance tool error:", errorMessage);
         return {
           content: [
             {
@@ -234,6 +264,15 @@ export function registerAnalyticsTools(
       fields,
       breakdowns,
     }) => {
+      console.log("export_insights tool called with parameters:", {
+        object_id,
+        level,
+        format,
+        date_preset,
+        time_range,
+        fields,
+        breakdowns,
+      });
       try {
         const params: Record<string, any> = {
           level,
@@ -256,7 +295,11 @@ export function registerAnalyticsTools(
           params.breakdowns = breakdowns;
         }
 
+        console.log("export_insights tool parameters prepared:", params);
+
         const result = await metaClient.getInsights(object_id, params);
+
+        console.log("export_insights tool result received:", result);
 
         let exportData: string;
         let mimeType: string;
@@ -268,6 +311,12 @@ export function registerAnalyticsTools(
           exportData = JSON.stringify(result.data, null, 2);
           mimeType = "application/json";
         }
+
+        console.log("export_insights tool export data prepared:", {
+          format,
+          mimeType,
+          dataSize: exportData.length,
+        });
 
         const response = {
           success: true,
@@ -287,6 +336,8 @@ export function registerAnalyticsTools(
           data: exportData,
         };
 
+        console.log("export_insights tool response prepared:", response);
+
         return {
           content: [
             {
@@ -296,8 +347,8 @@ export function registerAnalyticsTools(
           ],
         };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+        console.error("export_insights tool error:", errorMessage);
         return {
           content: [
             {
@@ -316,8 +367,8 @@ export function registerAnalyticsTools(
     "get_campaign_performance",
     GetInsightsSchema.shape,
     async (params) => {
+      console.log("get_campaign_performance tool called with parameters:", params);
       try {
-        // Set level to campaign and add campaign-specific fields
         const campaignParams = {
           ...params,
           level: "campaign" as const,
@@ -333,18 +384,23 @@ export function registerAnalyticsTools(
           ],
         };
 
-        const result = await metaClient.getInsights(
-          params.object_id,
-          campaignParams
-        );
+        console.log("get_campaign_performance tool parameters prepared:", campaignParams);
+
+        const result = await metaClient.getInsights(params.object_id, campaignParams);
+
+        console.log("get_campaign_performance tool result received:", result);
+
         const summary = calculateSummaryMetrics(result.data);
 
-        // Get campaign details
+        console.log("get_campaign_performance tool summary calculated:", summary);
+
         let campaignDetails;
         try {
           campaignDetails = await metaClient.getCampaign(params.object_id);
+          console.log("get_campaign_performance tool campaign details fetched:", campaignDetails);
         } catch {
           campaignDetails = { id: params.object_id, name: "Unknown Campaign" };
+          console.warn("get_campaign_performance tool failed to fetch campaign details for:", params.object_id);
         }
 
         const response = {
@@ -359,6 +415,8 @@ export function registerAnalyticsTools(
           query_parameters: campaignParams,
         };
 
+        console.log("get_campaign_performance tool response prepared:", response);
+
         return {
           content: [
             {
@@ -368,8 +426,8 @@ export function registerAnalyticsTools(
           ],
         };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+        console.error("get_campaign_performance tool error:", errorMessage);
         return {
           content: [
             {
@@ -388,8 +446,8 @@ export function registerAnalyticsTools(
     "get_attribution_data",
     GetInsightsSchema.shape,
     async (params) => {
+      console.log("get_attribution_data tool called with parameters:", params);
       try {
-        // Add attribution-specific breakdowns and fields
         const attributionParams = {
           ...params,
           fields: params.fields || [
@@ -402,17 +460,24 @@ export function registerAnalyticsTools(
           breakdowns: params.breakdowns || ["action_attribution_windows"],
         };
 
-        const result = await metaClient.getInsights(
-          params.object_id,
-          attributionParams
-        );
+        console.log("get_attribution_data tool parameters prepared:", attributionParams);
+
+        const result = await metaClient.getInsights(params.object_id, attributionParams);
+
+        console.log("get_attribution_data tool result received:", result);
+
+        const summary = calculateAttributionMetrics(result.data);
+
+        console.log("get_attribution_data tool summary calculated:", summary);
 
         const response = {
           attribution_data: result.data,
-          summary: calculateAttributionMetrics(result.data),
+          summary,
           query_parameters: attributionParams,
           total_records: result.data.length,
         };
+
+        console.log("get_attribution_data tool response prepared:", response);
 
         return {
           content: [
@@ -423,8 +488,8 @@ export function registerAnalyticsTools(
           ],
         };
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+        console.error("get_attribution_data tool error:", errorMessage);
         return {
           content: [
             {
