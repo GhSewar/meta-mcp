@@ -16,6 +16,11 @@ export const ListCampaignsSchema = z.object({
   after: z.string().optional().describe("Pagination cursor for next page"),
 });
 
+// Simple account-level schema for account verification and other checks
+export const VerifyAccountSetupSchema = z.object({
+  account_id: z.string().describe("Meta Ad Account ID to verify"),
+});
+
 export const CreateCampaignSchema = z.object({
   account_id: z.string().describe("Meta Ad Account ID"),
   name: z.string().min(1).describe("Campaign name"),

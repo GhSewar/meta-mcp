@@ -7,6 +7,7 @@ import {
   ListAdSetsSchema,
   ListCampaignsSchema,
   UpdateCampaignSchema,
+  VerifyAccountSetupSchema,
 } from "../types/mcp-tools.js";
 
 export function setupCampaignTools(
@@ -1466,12 +1467,7 @@ export function registerCampaignTools(
   server.tool(
     "verify_account_setup",
     "Verify that a Meta ad account is ready for ad creation. Checks for account access, payment method, Facebook pages, and active campaigns. Returns a setup status, recommendations, and warnings.",
-    {
-      account_id: {
-        type: "string",
-        description: "Meta Ad Account ID to verify",
-      },
-    },
+    VerifyAccountSetupSchema.shape,
     async ({ account_id }) => {
       try {
         const verification = {
