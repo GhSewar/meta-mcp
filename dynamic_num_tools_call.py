@@ -169,6 +169,44 @@ def collect_args_from_user(tool: types.Tool) -> Dict[str, Any]:
 
 
 # ---------------------------
+# Tool execution with retry logic
+# ---------------------------
+
+async def execute_tool_with_retry(session: ClientSession, tool: types.Tool, tool_index: int, max_retries: int = 10) -> Optional[types.CallToolResult]:
+    """Execute a tool with retry logic for robustness."""
+    tname = tool.name
+    result = None
+
+    for attempt in range(1, max_retries + 1):
+        try:
+            args = collect_args_from_user(tool)
+            print(f"[{tool_index}] Calling {tname} with args (attempt {attempt}/{max_retries}):\n{json.dumps(args, indent=2)}")
+
+            result = await session.call_tool(tname, args)
+
+            # Check if result indicates success
+            if result and not getattr(result, 'isError', False):
+                return result
+
+            # Result indicates error, retry if attempts remaining
+            if attempt < max_retries:
+                error_msg = getattr(result, 'error', 'Unknown error') if result else 'No result returned'
+                print(f"[{tool_index}] {tname} ERROR (attempt {attempt}/{max_retries}): {error_msg}")
+                print(f"[{tool_index}] Retrying {tname}...")
+            else:
+                print(f"[{tool_index}] {tname} FAILED after {max_retries} attempts\n")
+
+        except Exception as e:
+            if attempt < max_retries:
+                print(f"[{tool_index}] {tname} ERROR (attempt {attempt}/{max_retries}): {e}")
+                print(f"[{tool_index}] Retrying {tname}...")
+            else:
+                print(f"[{tool_index}] {tname} FAILED after {max_retries} attempts: {e}\n")
+
+    return None
+
+
+# ---------------------------
 # Mutation gate
 # ---------------------------
 
@@ -228,7 +266,7 @@ async def main():
                 except Exception:
                     print("Invalid number, try again.")
 
-            # Build ordered list to call based on tools_to_call sequence
+            # Build ordered list to call based on tools_to_call sequence for ctwa campaigns
             tools_to_call = [
                 "verify_account_setup",
                 "create_campaign",
@@ -262,14 +300,11 @@ async def main():
                     print(f"[{i}] {tname}: SKIPPED (set ALLOW_MUTATIONS=1 to enable write tools)\n")
                     continue
 
-                # Collect args interactively from the user
-                args = collect_args_from_user(tool)
+                # Execute tool with retry logic
+                result = await execute_tool_with_retry(session, tool, i)
 
-                print(f"[{i}] Calling {tname} with args:\n{json.dumps(args, indent=2)}")
-                try:
-                    result = await session.call_tool(tname, args)
-                except Exception as e:
-                    print(f"[{i}] {tname} ERROR: {e}\n")
+                # If all retries failed, continue to next tool
+                if result is None:
                     continue
 
                 # Display result content blocks

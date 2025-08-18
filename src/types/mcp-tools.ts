@@ -721,6 +721,7 @@ export const CreateAdCreativeSchema = z.object({
       "SELL",
       "GIFT_WRAP",
       "MAKE_AN_OFFER",
+      "WHATSAPP_MESSAGE"
     ])
     .optional()
     .describe("Call to action button type (40+ supported types)"),

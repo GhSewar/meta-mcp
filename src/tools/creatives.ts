@@ -210,8 +210,17 @@ export function registerCreativeTools(
             object_story_spec.link_data.caption = caption;
           }
 
+          if (call_to_action_type == "WHATSAPP_MESSAGE") {
+            object_story_spec.link_data.call_to_action =
+            {
+              "type": "WHATSAPP_MESSAGE",
+              "value": {
+                "app_destination": "WHATSAPP"
+              }
+            }
+          }
           // v23.0 Call-to-action structure with proper value object
-          if (call_to_action_type) {
+          else if (call_to_action_type) {
             object_story_spec.link_data.call_to_action = {
               type: call_to_action_type,
               value: {
